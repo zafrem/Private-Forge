@@ -1,0 +1,380 @@
+Desk-tools: System Requirements & Architecture Document
+                                                                                            
+  1. Product Overview                                                                       
+                                                                                            
+  Product Name: Desk-tools                                                                  
+  Type: Static, client-side-only developer utility platform                                 
+  Deployment Target: GitHub Pages (static export)                                           
+  Privacy Model: Zero-server, local-first — all data stored in browser IndexedDB            
+  Live URL: https://zafrem.github.io/Desk-tools/
+
+  ---
+  2. System Requirements
+
+  2.1 Functional Requirements
+
+  FR-01: Tool Platform
+
+  - The system shall provide 53 developer/productivity tools organized into 10 categories:
+    - Encoder (4): Text encoder, Base64, URL encoder, HTML entities
+    - Converter (6): File format (JSON/XML/CSV/YAML/TOML), JSON-CSV, binary-hex, timestamp,
+  markup (Markdown↔Wiki), encoding (mojibake fix)
+    - Formatter (4): Code formatter (Prettier), text case, SQL formatter, Markdown preview
+    - Generator (11): JSON-to-code, JSON schema, short URL, UUID, password, QR code, slug,
+  robots.txt, Open Graph, schema markup, sitemap
+    - Calculator (12): chmod, IP subnet, unit converter, date/D-day, salary/tax, loan,
+  compound interest, keyword density, meta tag checker, reading time, word counter,
+  canonical URL
+    - Designer (5): Icon generator, background remover, design tools (color picker/palette),
+   image filters, pixel art editor
+    - Security (3): JWT decoder, hash generator, AES/RSA encryption
+    - Developer (5): JSON explorer (tree view), cron expression builder, regex tester, text
+  diff, command palette
+    - AI (1): Local Ollama LLM chat client
+    - Other (2): PDF tools, Pomodoro timer
+  - Each tool shall be a standalone page accessible via /tools/{tool-id}
+
+  FR-02: Productivity Apps (Core Pages)
+
+  - Kanban Board — Drag-and-drop task columns (/kanban)
+  - Notepad — Markdown-based note editor with tags (/notepad)
+  - Daily Tasks — Recurring daily checklist (/daily-tasks)
+  - Whiteboard — Freeform drawing canvas (/whiteboard)
+  - Weekly Scheduler — Time-slot-based weekly planner (/weekly-scheduler)
+  - Terms Dictionary — Categorized term/definition store (/terms)
+  - Bookmarks Manager — Grouped URL bookmarks with ordering (/bookmarks)
+
+  FR-03: Tool Discovery
+
+  - Fuzzy search across tool names, descriptions, tags, and categories
+  - Right sidebar with searchable, categorized tool listing
+  - Home page with tool grid/cards
+
+  FR-04: Data Persistence
+
+  - All user data stored in browser IndexedDB via Dexie.js
+  - Tables: ganttTasks, notes, terms, bookmarks, commands, preferences, dailyTasks,
+  weeklySchedule, chatSessions
+  - Bulk export/import of all data (JSON format)
+  - Reactive queries via useLiveQuery hook
+
+  FR-05: Internationalization (i18n)
+
+  - Supported languages: English, Korean (ko), Chinese Simplified (zh), Japanese (ja)
+  - Browser language auto-detection with English fallback
+  - Namespaced translations: common, navigation, home, tools
+
+  FR-06: Theming
+
+  - Light and dark mode toggle
+  - CSS variable-based color system
+  - Theme persisted via next-themes
+
+  FR-07: PWA Support
+
+  - Service worker registration for offline capability
+  - Web app manifest (manifest.json) for installability
+  - Favicon and app icon set (192px, apple-touch-icon)
+
+  FR-08: Data Export/Import
+
+  - Export all IndexedDB data as JSON
+  - Import previously exported data
+  - Controls accessible from top navigation
+
+  ---
+  2.2 Non-Functional Requirements
+
+  ID: NFR-01
+  Requirement: Privacy
+  Specification: Zero network requests for data storage. All processing client-side. No
+    analytics, no telemetry.
+  ────────────────────────────────────────
+  ID: NFR-02
+  Requirement: Performance
+  Specification: Static HTML/JS/CSS. Code splitting via dynamic imports. Client-side search
+  <
+    50ms.
+  ────────────────────────────────────────
+  ID: NFR-03
+  Requirement: Compatibility
+  Specification: Modern browsers (Chrome, Firefox, Safari, Edge). IndexedDB required.
+  ────────────────────────────────────────
+  ID: NFR-04
+  Requirement: Accessibility
+  Specification: Semantic HTML, ARIA labels, keyboard navigation, screen reader support
+    (sr-only).
+  ────────────────────────────────────────
+  ID: NFR-05
+  Requirement: Responsiveness
+  Specification: Mobile-first design. Sidebar collapses on small screens. Breakpoints: md,
+    lg, xl.
+  ────────────────────────────────────────
+  ID: NFR-06
+  Requirement: Offline
+  Specification: Fully functional after initial load (service worker caching).
+  ────────────────────────────────────────
+  ID: NFR-07
+  Requirement: Deployment
+  Specification: Static export to /out. GitHub Pages with basePath=/Desk-tools. Automated
+  via
+    GitHub Actions.
+  ────────────────────────────────────────
+  ID: NFR-08
+  Requirement: Testing
+  Specification: Unit tests with Jest + Testing Library. Coverage reports (lcov, html) for
+    SonarQube.
+
+  ---
+  3. Architecture Document
+
+  3.1 High-Level Architecture
+
+  ┌─────────────────────────────────────────────────────────┐
+  │                    GitHub Pages CDN                       │
+  │                  (Static HTML/JS/CSS)                     │
+  └─────────────────────┬───────────────────────────────────┘
+                        │ serves
+  ┌─────────────────────▼───────────────────────────────────┐
+  │                 Browser (Client)                         │
+  │                                                          │
+  │  ┌──────────────────────────────────────────────────┐   │
+  │  │              Next.js 15 App (React 19)            │   │
+  │  │                                                    │   │
+  │  │  ┌─────────┐  ┌──────────┐  ┌────────────────┐  │   │
+  │  │  │  Root   │  │  TopNav  │  │  ToolSidebar   │  │   │
+  │  │  │ Layout  │  │          │  │  (dynamic)     │  │   │
+  │  │  └────┬────┘  └──────────┘  └────────────────┘  │   │
+  │  │       │                                           │   │
+  │  │  ┌────▼──────────────────────────────────────┐   │   │
+  │  │  │              Page Content                  │   │   │
+  │  │  │                                            │   │   │
+  │  │  │  ┌──────────┐  ┌───────────────────────┐  │   │   │
+  │  │  │  │Core Pages│  │  /tools/[tool-id]     │  │   │   │
+  │  │  │  │(Kanban,  │  │  (53 tool pages)      │  │   │   │
+  │  │  │  │ Notes,..)│  │  wrapped in           │  │   │   │
+  │  │  │  │          │  │  <ToolLayout>         │  │   │   │
+  │  │  │  └──────────┘  └───────────────────────┘  │   │   │
+  │  │  └───────────────────────────────────────────┘   │   │
+  │  └──────────────────────────────────────────────────┘   │
+  │                                                          │
+  │  ┌───────────────┐  ┌─────────────┐  ┌──────────────┐  │
+  │  │  IndexedDB    │  │ Service     │  │ Web Crypto   │  │
+  │  │  (Dexie.js)   │  │ Worker      │  │ API          │  │
+  │  │  - 9 tables   │  │ (offline)   │  │ (AES/RSA)    │  │
+  │  └───────────────┘  └─────────────┘  └──────────────┘  │
+  └──────────────────────────────────────────────────────────┘
+
+  3.2 Technology Stack
+
+  ┌────────────────┬───────────────────────────┬────────────┬─────────────────────────────┐
+  │     Layer      │        Technology         │  Version   │           Purpose           │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Framework      │ Next.js                   │ 15.1.0     │ SSG with output: "export"   │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ UI Library     │ React                     │ 19.0.0     │ Component rendering         │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Styling        │ Tailwind CSS              │ 3.4.1      │ Utility-first CSS           │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Components     │ shadcn/ui (Radix UI)      │ various    │ Accessible UI primitives    │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Icons          │ lucide-react              │ 0.562.0    │ SVG icon library            │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Database       │ Dexie.js                  │ 4.2.1      │ IndexedDB ORM               │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Search         │ Fuse.js                   │ 7.1.0      │ Client-side fuzzy search    │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Theming        │ next-themes               │ 0.4.6      │ Dark/light mode             │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ i18n           │ i18next + react-i18next   │ 25.7 /     │ Multi-language support      │
+  │                │                           │ 16.5       │                             │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Drag & Drop    │ @dnd-kit                  │ 6.3.1      │ Sortable/draggable UI       │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Drawing        │ Konva.js + react-konva    │ 10.0 /     │ Canvas-based whiteboard     │
+  │                │                           │ 19.2       │                             │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Code           │ Prettier                  │ 3.7.4      │ Multi-language formatter    │
+  │ Formatting     │                           │            │                             │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ PDF            │ pdf-lib                   │ 1.17.1     │ Client-side PDF             │
+  │                │                           │            │ manipulation                │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Charts         │ Recharts                  │ 3.6.0      │ Data visualization          │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Crypto         │ crypto-js + Web Crypto    │ 4.2.0      │ Hashing, AES, RSA           │
+  │                │ API                       │            │                             │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ Testing        │ Jest + Testing Library    │ 29.7 /     │ Unit & component tests      │
+  │                │                           │ 16.1       │                             │
+  ├────────────────┼───────────────────────────┼────────────┼─────────────────────────────┤
+  │ TypeScript     │ TypeScript                │ 5.x        │ Type safety                 │
+  └────────────────┴───────────────────────────┴────────────┴─────────────────────────────┘
+
+  3.3 Directory Structure
+
+  Desk-tools/
+  ├── app/                          # Next.js App Router pages
+  │   ├── layout.tsx                # Root layout (providers, fonts)
+  │   ├── globals.css               # Tailwind + CSS variables
+  │   ├── page.tsx                  # Home page
+  │   ├── tools/[tool-id]/page.tsx  # 53 tool pages
+  │   ├── kanban/page.tsx           # Core app pages
+  │   ├── notepad/page.tsx
+  │   ├── daily-tasks/page.tsx
+  │   ├── whiteboard/page.tsx
+  │   ├── weekly-scheduler/page.tsx
+  │   ├── terms/page.tsx
+  │   └── bookmarks/page.tsx
+  ├── components/
+  │   ├── app-shell.tsx             # Main layout shell
+  │   ├── top-nav.tsx               # Header navigation
+  │   ├── tool-sidebar.tsx          # Right sidebar (dynamic import)
+  │   ├── tool-layout.tsx           # Tool page wrapper
+  │   ├── sidebar-context.tsx       # Sidebar state context
+  │   ├── theme-provider.tsx        # Theme wrapper
+  │   ├── i18n-provider.tsx         # i18n wrapper
+  │   ├── [feature].tsx             # Feature-specific components
+  │   └── ui/                       # shadcn/ui primitives
+  ├── lib/
+  │   ├── tools-registry.ts         # Tool metadata registry
+  │   ├── search.ts                 # Fuse.js search
+  │   ├── db.ts                     # Dexie.js schema
+  │   ├── encoders.ts               # Encoding/decoding/hashing
+  │   ├── code-formatter.ts         # Prettier integration
+  │   ├── format-converters.ts      # Data format conversion
+  │   ├── background-remover.ts     # Image processing
+  │   ├── crypto-modern.ts          # AES-GCM, RSA-OAEP
+  │   ├── i18n.ts                   # i18next config
+  │   └── utils.ts                  # cn() utility
+  ├── locales/{en,ko,zh,ja}/        # Translation JSON files
+  ├── types/                        # TypeScript definitions
+  ├── __tests__/                    # Jest test suites
+  ├── public/                       # Static assets + PWA manifest
+  ├── .github/workflows/deploy.yml  # CI/CD pipeline
+  ├── next.config.ts                # Static export config
+  ├── tailwind.config.ts            # Theme & plugin config
+  ├── jest.config.ts                # Test runner config
+  └── package.json                  # Dependencies & scripts
+
+  3.4 Database Schema (IndexedDB via Dexie.js)
+
+  DeskToolsDB (v5)
+  ├── ganttTasks:    ++id, title, startDate, endDate, *tags, createdAt
+  ├── notes:         ++id, title, *tags, createdAt, updatedAt
+  ├── terms:         ++id, term, category, *tags, createdAt
+  ├── bookmarks:     ++id, title, group, order, createdAt
+  ├── commands:      ++id, title, *tags, createdAt
+  ├── preferences:   ++id, &key, updatedAt
+  ├── dailyTasks:    ++id, title, lastCompletedAt, order, createdAt     (v2+)
+  ├── weeklySchedule:++id, [dayOfWeek+timeSlot], completed, createdAt   (v3+)
+  └── chatSessions:  ++id, title, model, createdAt, updatedAt           (v5+)
+
+  3.5 Component Provider Hierarchy
+
+  <html>
+    <body>
+      <I18nProvider>
+        <ThemeProvider attribute="class" defaultTheme="system">
+          <SidebarProvider>
+            <AppShell>
+              <TopNav />
+              <main>{children}</main>
+              <ToolSidebar />  (dynamic import)
+            </AppShell>
+          </SidebarProvider>
+        </ThemeProvider>
+      </I18nProvider>
+      <ServiceWorkerRegistration />
+    </body>
+  </html>
+
+  3.6 Tool Registration Pattern
+
+  Every tool is registered in lib/tools-registry.ts:
+
+  interface Tool {
+    id: string;              // URL slug: "base64-converter"
+    name: string;            // Display: "Base64 Converter"
+    description: string;     // Short description
+    tags: string[];          // Searchable tags
+    category: ToolCategory;  // encoder | converter | formatter | generator |
+                             // calculator | designer | security | developer |
+                             // ai | other
+    path: string;            // Route: "/tools/base64-converter"
+    icon?: string;           // lucide-react icon name
+  }
+
+  To add a new tool:
+  1. Add entry to TOOLS_REGISTRY array
+  2. Create app/tools/{id}/page.tsx as a "use client" component
+  3. Wrap with <ToolLayout title="..." description="...">
+  4. Add helper functions to lib/ if needed
+
+  3.7 Build & Deployment Pipeline
+
+  Push to main
+      │
+      ▼
+  GitHub Actions (deploy.yml)
+      │
+      ├── Checkout code
+      ├── Setup Node.js 20
+      ├── npm ci
+      ├── npm run build (NEXT_PUBLIC_BASE_PATH=/Desk-tools)
+      │       │
+      │       ▼
+      │   next build → static export to /out
+      │
+      ├── Upload /out as artifact
+      └── Deploy to GitHub Pages
+
+  3.8 Key Design Decisions
+
+  Decision: Static export (output: "export")
+  Rationale: No server needed; free GitHub Pages hosting
+  ────────────────────────────────────────
+  Decision: IndexedDB (Dexie.js) over localStorage
+  Rationale: Structured data, larger capacity, reactive queries
+  ────────────────────────────────────────
+  Decision: Client-side only
+  Rationale: Maximum privacy; no data leaves the browser
+  ────────────────────────────────────────
+  Decision: shadcn/ui (copy-paste components)
+  Rationale: Full control, no library lock-in, tree-shakeable
+  ────────────────────────────────────────
+  Decision: Fuse.js for search
+  Rationale: Fast client-side fuzzy matching, no server dependency
+  ────────────────────────────────────────
+  Decision: Dynamic import for sidebar
+  Rationale: Reduces initial bundle; sidebar loads on demand
+  ────────────────────────────────────────
+  Decision: CSS variables for theming
+  Rationale: Efficient dark/light switching without JS re-renders
+  ────────────────────────────────────────
+  Decision: i18next
+  Rationale: Mature, framework-agnostic i18n with auto-detection
+  ────────────────────────────────────────
+  Decision: Web Crypto API for encryption
+  Rationale: Browser-native, no external crypto dependencies for AES/RSA
+
+  3.9 Testing Strategy
+
+  - Unit tests: Pure utility functions (encoders, search, utils, background-remover)
+  - Component tests: React Testing Library for ToolLayout, DailyTasks
+  - Registry tests: Validate tool metadata structure and uniqueness
+  - Mocking: Next.js router, themes, IndexedDB, canvas APIs
+  - Coverage: lcov + HTML reports for SonarQube integration
+  - CI: npm run test:ci in GitHub Actions
+
+  3.10 Scripts Reference
+
+  npm run dev           # Next.js dev server (hot reload)
+  npm run build         # Production static export → /out
+  npm run lint          # ESLint
+  npm run start         # Production server (local preview)
+  npm test              # Jest (all tests)
+  npm run test:watch    # Jest watch mode
+  npm run test:coverage # Jest with coverage
+  npm run test:ci       # CI mode with coverage
+  npx serve@latest out  # Preview static build locally

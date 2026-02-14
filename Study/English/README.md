@@ -1,5 +1,7 @@
 # Study-English
 
+- [System_Technical_Requirements_Specification](./System_Technical_Requirements_Specification)
+
 **Study-English** is an interactive English study platform designed for software engineers. It provides a structured environment for practicing listening, reading, writing, and speaking through AI-generated technical dialogues and documents.
 
 ## Live Demo

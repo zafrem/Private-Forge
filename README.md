@@ -7,20 +7,29 @@ The goal of this project is to create a collaborative environment where AIs with
 This repository is organized into four main pillars, each representing a key area of focus:
 
 - **[Company](./Company):** Professional projects, business logic, and corporate tools.
-- **[Family](./Family):** Tools and resources for family management and personal life.
-- **[Hobby](./Hobby):** Creative pursuits, side projects, and recreational tools.
+  - **[Utils (Desk-tools)](./Company/Utils):** A local-first utility platform with 53+ tools for multi-tasking professionals.
 - **[Study](./Study):** Educational resources, learning platforms, and skill development.
-  - **[AI](./Study/AI):** Research and development in Artificial Intelligence.
-  - **[English](./Study/English):** An interactive English study platform for software engineers.
   - **[Security](./Study/Security):** Security research and toolsets.
 
 ## Featured Projects
 
-### Study-English
+### Desk-tools
+A high-performance, local-first utility platform designed for multi-tasking individuals at startups. Built with Next.js 15 and React 19, it runs entirely in the browser with all data stored locally via IndexedDB.
+
+ ![Desk-Tools](Company/Utils/images/Main.png)
+
+- [README](./Company/Utils/README.md)
+- **Key Features:** 50+ utilities (encoders, converters, formatters, generators, calculators, design tools), Kanban Board, Notepad, Whiteboard, local AI chat (Ollama), multi-language support (EN/KO/ZH/JA), and PWA support.
+
+
+### English Study
 An interactive English study platform designed for software engineers. It provides a structured environment for practicing listening, reading, writing, and speaking through AI-generated technical dialogues and documents.
 
-- **Live Demo:** [Study-English Web Player](./Study/English/README.md)
+ ![English Study](Study/English/images/Desktop-Init.png)
+
+- [README](./Study/English/README.md)
 - **Key Features:** Multi-mode learning (Listening, Reading, Writing, Speaking), Study Calendar, and PWA support.
+
 
 ## Getting Started
 
