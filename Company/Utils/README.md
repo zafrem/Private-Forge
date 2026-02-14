@@ -6,7 +6,7 @@ A high-performance, local-first utility platform designed for multi-tasking indi
 
 - [System_Technical_Requirements_Specification](./System_Technical_Requirements_Specification)
 
-![Main Page](./images/Init-page.jpg)
+![Main Page](./images/Main.jpg)
 
 ## The purpose behind the development
 
